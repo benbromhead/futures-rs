@@ -146,6 +146,22 @@ impl<Fut: Future> FuturesOrdered<Fut> {
         self.next_incoming_index += 1;
         self.in_progress_queue.push(wrapped);
     }
+
+    /// Prepends a future to the front of the queue.
+    ///
+    /// This function submits the given future to the internal set for managing.
+    /// This function will not call `poll` on the submitted future. The caller
+    /// must ensure that `FuturesOrdered::poll` is called in order to receive
+    /// task notifications. This future will be the next future to be returned
+    /// complete.
+    pub fn prepend(&mut self, future: Fut) {
+        let wrapped = OrderWrapper {
+            data: future,
+            index: self.next_outgoing_index - 1,
+        };
+        self.next_outgoing_index -= 1;
+        self.in_progress_queue.push(wrapped);
+    }
 }
 
 impl<Fut: Future> Default for FuturesOrdered<Fut> {
