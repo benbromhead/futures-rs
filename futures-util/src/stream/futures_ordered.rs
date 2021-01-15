@@ -155,19 +155,16 @@ impl<Fut: Future> FuturesOrdered<Fut> {
     /// task notifications. This future will be the next future to be returned
     /// complete.
     pub fn prepend(&mut self, future: Fut) {
-        let index = if self.next_outgoing_index == 0 {
-            0
+        if self.next_outgoing_index == 0 {
+            self.push(future)
         } else {
+            let wrapped = OrderWrapper {
+                data: future,
+                index: self.next_outgoing_index - 1,
+            };
             self.next_outgoing_index -= 1;
-            self.next_outgoing_index
-        };
-
-        let wrapped = OrderWrapper {
-            data: future,
-            index,
-        };
-
-        self.in_progress_queue.push(wrapped);
+            self.in_progress_queue.push(wrapped);
+        }
     }
 }
 
